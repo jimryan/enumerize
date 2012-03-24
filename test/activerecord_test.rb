@@ -13,6 +13,8 @@ ActiveRecord::Base.connection.instance_eval do
     t.string :sex
     t.string :role
     t.string :name
+    t.string :foo
+    t.string :bar
   end
 end
 
@@ -22,6 +24,10 @@ class User < ActiveRecord::Base
   enumerize :sex, :in => [:male, :female]
 
   enumerize :role, :in => [:user, :admin], :default => :user
+
+  enumerize :foo, :in => [:a, :b], :allow_blank => true
+
+  enumerize :bar, :in => [:a, :b], :allow_nil => false, :default => :a
 end
 
 describe Enumerize::ActiveRecord do
@@ -63,5 +69,29 @@ describe Enumerize::ActiveRecord do
   it "uses persisted value for validation if it hasn't has been set" do
     user = User.create! :sex => :male
     User.find(user).read_attribute_for_validation(:sex).must_equal 'male'
+  end
+
+  it 'does not allow blank by default' do
+    user = User.new
+    user.sex = ''
+    user.wont_be :valid?
+  end
+
+  it 'respects :allow_blank option' do
+    user = User.new
+    user.foo = ''
+    user.must_be :valid?
+  end
+
+  it 'allows nil by default' do
+    user = User.new
+    user.sex = nil
+    user.must_be :valid?
+  end
+
+  it 'respects :allow_nil option' do
+    user = User.new
+    user.bar = nil
+    user.wont_be :valid?
   end
 end
